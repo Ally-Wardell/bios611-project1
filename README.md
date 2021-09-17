@@ -1,3 +1,1 @@
-edited my readme to see if i can update it
-EOF
-git status
+THIS IS MY UPDATED README.MD. Practicing another commit and push 
