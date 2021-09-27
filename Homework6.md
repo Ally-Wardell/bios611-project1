@@ -72,6 +72,13 @@ make_fib_counter <- function(c1, c2){
         new_c2
     }
 }
+
+
+fib_counter <- make_fib_counter(1,1);
+fib_counter()
+fib_counter()
+
+etc...
 ```
    
 6. The sequence (1,1) constitutes the initial condition for the
@@ -83,8 +90,26 @@ make_fib_counter <- function(c1, c2){
    
    ```
    make_nocci <- function(c1, c2){
-       function(){
+      function(){
            <fun part here>
        }
        }
    ```
+
+
+make_nocci <- function(c1, c2){
+    new_c1 <- c1;
+    new_c2 <- c2
+    function(){
+        old_c1 <- new_c1;
+        old_c2 <- new_c2;
+        new_c1 <<-  new_c2; ## Update the old value in the parent scope.
+        new_c2 <<- old_c1 + old_c2
+        new_c2
+    }
+}
+
+counter <- make_nocci(2,3);
+counter()
+etc...
+```
