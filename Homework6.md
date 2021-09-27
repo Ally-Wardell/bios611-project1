@@ -97,6 +97,7 @@ etc...
    ```
 
 
+```
 make_nocci <- function(c1, c2){
     new_c1 <- c1;
     new_c2 <- c2
