@@ -61,9 +61,9 @@ test_value
    gives successive fibonocci numbers upon repeated invocation.
 
 ```
-make_fib_counter <- function(c1, c2){
-    new_c1 <- c1;
-    new_c2 <- c2
+make_fib_counter <- function(){
+    new_c1 <- 1;
+    new_c2 <- 1;
     function(){
         old_c1 <- new_c1;
         old_c2 <- new_c2;
@@ -74,7 +74,7 @@ make_fib_counter <- function(c1, c2){
 }
 
 
-fib_counter <- make_fib_counter(1,1);
+fib_counter <- make_fib_counter();
 fib_counter()
 fib_counter()
 
