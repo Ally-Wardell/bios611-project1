@@ -1,0 +1,101 @@
+---
+title: "BIOS 611 Homework 7"
+author: "Ally Wardell"
+date: "10/8/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library('tidyverse')
+library('deSolve')
+library('reticulate')
+```
+
+
+##QUESTION 1: Perform PCA
+Q1) Perform a principal component analysis in R. How many components do you need to account for more than 90 percent of the variance in the data set?
+
+A1) We only need two principal components to account for more than 90 percent of
+the variance in the data set. The first principle component accounts for ~ 83.7 % 
+of the variance, and the second principal component accounts for ~ 12.1% of the components, 
+thus a cumulative proportion of ~ 95.8 % of the variance. 
+  
+```{r q1}
+hw7_data <- read.csv("https://raw.githubusercontent.com/Vincent-Toups/datasci611/main/lectures/10-dimensionality-reduction/homework_data.csv")
+
+pca_results <- prcomp(hw7_data)
+pca_results
+
+summary(pca_results)
+```
+## QUESTION 2: Plot the first 2 principle components
+
+Q2) Plot the first two components of the data. What can you say about the data from this picture?
+
+A2) It looks like there could be two parallel clusters of points. Are very few points in the corners of the plot, thus creating a loosely diamond like shape. More will need to be done to determine if there are acutally clusters. 
+
+```{r pressure, echo=FALSE}
+
+ggplot(pca_results$x %>% as_tibble() %>% select(PC1, PC2), aes(PC1, PC2)) +
+   geom_point()
+
+```
+
+
+## QUESTION 3: Plot against each other
+
+Q3) For a data set this small we might do some due diligence. Plot each pair of coordinates in the original dataset against one another. Assuming we're looking for clusters in the data set, is there anything we might do to the data to make it easier to extract these clusters?
+
+A3) To make it easier to identify clusters, scaling and centering these data if they have not already been scaled and centered my help make these plots more visually appealing. Since a PCA
+is a rotation, you usually want to rotate around the centroid of the data. Additionally, caling in particular, can be challenging in some situations because you have no idea whether one variable is more important than another.
+
+```{r pressure, echo=FALSE}
+
+x_y <- ggplot(hw7_data, aes(x=x, y=y)) +
+  geom_point()
+x_y
+  
+z_y <- ggplot(hw7_data, aes(x=z, y=y)) +
+  geom_point()
+z_y
+  
+x_z <- ggplot(hw7_data, aes(x=x, y=z)) +
+  geom_point()
+x_z
+  
+
+```
+
+## QUESTION 4: Modify Docker container, run TSNE
+
+Q4) Modify you docker container to include sklearn and reticulate (you make copy the appropriate lines from the 611 Dockerfile). Perform a TSNE. Contrast the results with your insights from problems 1-4.
+
+A4) The results from parts 1-3 indicate that there may be some clustering in these data. The PCA plot (PC1 vs PC2), looks to have potentially 2 clusters. Additionally, the plots of our coordinate pairs against each other produce some patterns (backwards L shape XvY and ZvX). The TSNE appears to show similar results where there appears to be 2-3 clusters of points. The actual plots of PC1 v PC2 and V1 v V2 look very different, but appear to agree that there are clusters present. The TSNE, shows that there may be 3 cluster vs my original thought of 2 with the PCA plot. 
+
+```{r pressure, echo=FALSE}
+
+
+use_python("/usr/bin/python3")
+manifold <- import("sklearn.manifold")
+
+tsne_instance <- manifold$TSNE(n_components=as.integer(2))
+
+tsne_instance
+
+results <- tsne_instance$fit_transform(hw7_data %>% as.matrix()) %>%
+    as_tibble()
+results
+
+ggplot(results, aes(V1, V2)) + geom_point()
+  
+
+```
+## QUESTION 5 : Repeat TSNE a few times 
+
+Q5) Repeat the TSNE a few times. Do you get different results?
+
+A5) I repeated the TSNE multiple times and got different results each time. However, they seem to all show presence of some groupings of points. 
+
+
