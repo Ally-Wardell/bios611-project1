@@ -10,3 +10,4 @@ RUN pip3 install sklearn
 RUN R -e "install.packages(\"Rcpp\")"
 RUN R -e "install.packages(\"rdist\")"
 RUN R -e "install.packages(\"fields\")"
+RUN R -e "install.packages(\"ggrepel\")"
