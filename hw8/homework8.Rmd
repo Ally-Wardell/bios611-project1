@@ -1,0 +1,188 @@
+---
+title: "BIOS 611 Homework8"
+author: Ally Wardell
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library('tidyverse')
+library('rdist')
+#library('pgirmess')
+```
+
+## Overwiew
+Consider the following data set:
+
+```{r cars}
+data <- rbind(tibble(x=rnorm(100, 3, 1),
+                     y=rnorm(100, 3, 1)),
+              tibble(x=rnorm(100, -3, 1),
+                     y=rnorm(100, 3, 1)),
+              tibble(x=rnorm(100, 0, 1),
+                     y=rnorm(100, -3, 1)));
+
+ggplot(data, aes(x,y)) + geom_point() + coord_equal()
+
+
+```
+
+## Question 1: k-means
+ Q1) Perform a k-means clustering with 3 clusters and plot the results with the 
+ clusters color coded.
+ 
+
+```{r pressure, echo=FALSE}
+
+k_results <- kmeans(data, centers=3);
+k_results
+
+data_2 <- data %>% mutate(cluster=k_results$cluster) 
+head(data_2)
+
+                                      
+kmeans_plot <- ggplot(data = data_2, 
+                      mapping = aes(x = x, y = y, color = cluster)) + 
+               geom_point()
+
+kmeans_plot
+```
+
+## QUESTION 2: cluster with more clusters, mutual informations
+Q2) Now consider clustering with n = 2, 3, 4, 5, 6 clusters. Repeat the clustering 5 times for each number of clusters and calculate the normalized mutual information between all the clusterings for each different number of clusters. Plot the average value of these mutual informations for n = 2, 3, 4, 5, 6.
+
+What is your interpretation of these results?
+
+A2) The average mutual information is about 0.5872. to see perfect alignment we would want a mutual information of 1. We can see that as the we compute the normalized mutual information for k-means for number of cluster labelings that are closer and higher, then the mutual information is higher (i.e. mutual information for 5 and 6 clusters (0.91), mutual information for 4 and 5 clusters, mutual information for 4 and 6 clusters.) Additionally, the normalized mutual information is for 2 and 3 clusters is 0.18, indicating that the cluster labelings assigned are not very similar. This would make sense, as there should be many cluster labelings that differ when two clusters are used vs. three. All other pairwise cluster labelings have a normalized mutual information of about 0.5. This indicates that the label matching isn't great, but isn't very bad. This is to be expected becasue we are comparing schemes with different numbers of clusters. 
+
+```{r Q2}
+
+k_results2 <- kmeans(data, centers=2);
+k_results2
+k_results3 <- kmeans(data, centers=3);
+k_results3
+k_results4 <- kmeans(data, centers=4);
+k_results4
+k_results5 <- kmeans(data, centers=5);
+k_results5
+k_results6 <- kmeans(data, centers=6);
+k_results6
+
+data_q2 <- data %>% mutate(cluster23=k_results2$cluster, cluster24=k_results$cluster ) 
+head(data_2)
+
+shannon <- function(tokens){
+    tbl <- table(tokens);
+    p <- (tbl %>% as.numeric())/sum(tbl %>% as.numeric());
+    sum(-p*log(p));
+}  
+
+mutinf <- function(a,b){
+    sa <- shannon(a);
+    sb <- shannon(b);
+    sab <- shannon(sprintf("%d:%d", a, b));
+    sa + sb - sab;
+}
+
+normalized_mutinf <- function(a,b){
+    2*mutinf(a,b)/(shannon(a)+shannon(b));
+}
+
+point23 <- normalized_mutinf(k_results2$cluster, k_results3$cluster)
+point23
+point24 <- normalized_mutinf(k_results2$cluster, k_results4$cluster)
+point24
+point25 <- normalized_mutinf(k_results2$cluster, k_results5$cluster)
+point25
+point26 <- normalized_mutinf(k_results2$cluster, k_results6$cluster)
+point26
+point34 <- normalized_mutinf(k_results3$cluster, k_results4$cluster)
+point34
+point35 <- normalized_mutinf(k_results3$cluster, k_results5$cluster)
+point35
+point36 <- normalized_mutinf(k_results3$cluster, k_results6$cluster)
+point36
+point45 <- normalized_mutinf(k_results4$cluster, k_results5$cluster)
+point45
+point46 <- normalized_mutinf(k_results4$cluster, k_results6$cluster)
+point46
+point56 <- normalized_mutinf(k_results5$cluster, k_results6$cluster)
+point56
+
+df <- data.frame(point23, point24, point25, point26, point34, point35, point36,
+                 point45, point46, point56)
+
+average_nmi <- (point23 + point24 + point25 + point26 + point34 + point35 + point36 +
+                 point45 + point46 + point56) /10
+
+Avg_norm_mutual_info <- table(average_nmi)
+Avg_norm_mutual_info 
+```
+
+## QUESTION 3: 
+Now consider this data set:
+data2 <- rbind(tibble(r=rnorm(100, 3, 0.8),
+                      th=rnorm(100, 3, 0.1)),
+               tibble(r=rnorm(100, 0, 1.2),
+                      th=rnorm(100, 3*pi/2, 0.1)),
+               tibble(r=rnorm(400, 6, 0.5),
+                      th=runif(400, 0, 2*pi))) %>%
+    transmute(x=r*cos(th),y=r*sin(th)); 
+ggplot(data2, aes(x,y)) + geom_point()
+
+Q3) Do you expect k-means to work on this data set? What about fuzzy-c-means? Why or why not?
+
+A3) I would not expect k-means to work on this data. There the means of the clusters will be located in the same position, thus looping through the points and assigning each point to the cluster to whose center it is closest will not work here. In fuzzy k-means each entity is only assigned a _probability_ of being in a cluster based on its distance from the center. Fuzzy-k-means works
+well when your data is distributed in concentric clusters by may have
+outliers that you want to "automatically ignore". Therefore, fuzzy k-means may work better for this data set. 
+
+```{r Q3}
+data2 <- rbind(tibble(r=rnorm(100, 3, 0.8),
+                      th=rnorm(100, 3, 0.1)),
+               tibble(r=rnorm(100, 0, 1.2),
+                      th=rnorm(100, 3*pi/2, 0.1)),
+               tibble(r=rnorm(400, 6, 0.5),
+                      th=runif(400, 0, 2*pi))) %>%
+    transmute(x=r*cos(th),y=r*sin(th)); 
+ggplot(data2, aes(x,y)) + geom_point()
+
+data2 %>% head
+```
+
+
+## QUESTION 4
+Q4) Find all the pairwise euclidean distances between the points and construct a similarity matrix for this data set.
+
+Hint: the package "rdist" provides a function "rdist" which calculates a matrix of pairwise distances.
+
+Once you have this matrix, choose a threshold (by looking at the plot) and then invoke spectral clustering via reticulate following the example in the class with this matrix.
+
+You will need to specific the "precomputed" "affinity" option.
+
+Cluster with 3 clusters and make a color coded plot of your results.
+
+```{r Q4}
+#library('rdist')
+#pw_matrix <- rdist(data, metric = "euclidean") 
+#pw_matrix
+#plot(pw_matrix)
+
+library(fields)
+dist_mat<-rdist(data_2)
+
+plot(dist_mat)
+# use 3 as threshold 
+library(reticulate);
+use_python("/usr/bin/python3");
+cluster <- import("sklearn.cluster");
+sc <- cluster$SpectralClustering(n_clusters=as.integer(3),
+                                 affinity="precomputed")
+
+pca.r <- prcomp(dist_mat, scale=T, center=T)
+
+pca.r.x <- pca.r$x
+
+#I keep getting an error here. I think some values in my matrix are just too small. I read that standardization and normalization could fix it, but we are scaling and centering already. 
+sc$fit_predict(pca.r.x)
+
+```
