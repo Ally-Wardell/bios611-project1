@@ -1,0 +1,242 @@
+---
+title: "BIOS 611 HOMEWORK 9"
+author: "Ally Wardell"
+date: "10/19/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library('tidyverse')
+library('stats')
+library('matlab')
+library('pROC')
+library('MASS')
+library('gbm')
+```
+
+## DATA
+Grab the powers data sets from:
+
+https://github.com/Vincent-Toups/datasci611/raw/main/lectures/12-classification/source_data/prime_earth_characters.csv https://github.com/Vincent-Toups/datasci611/raw/main/lectures/12-classification/source_data/prime_earth_powers.csv
+
+## QUESTION 1
+Reproduce the code which replaces unusual powers with "other", and pivots the resulting data set to a wide form. You can copy the code from lecture but this should be something you can do without doing so now.
+
+```{r make dataset}
+genders <- read_csv("https://raw.githubusercontent.com/Vincent-Toups/datasci611/main/lectures/12-classification/source_data/prime_earth_characters.csv") %>%
+    filter(property_name=="gender") %>% select(-property_name, -universe) %>%
+    rename(gender=value);
+
+powers <- read_csv("https://raw.githubusercontent.com/Vincent-Toups/datasci611/main/lectures/12-classification/source_data/prime_earth_powers.csv") %>%
+    select(power, character);
+
+power_counts <- powers %>% group_by(power) %>% tally() %>% arrange(desc(n));
+common <- power_counts %>% pull(power) %>% head(20);
+uncommon <- power_counts %>% filter(!(power %in% common)) %>% pull(power);
+
+powers_wide <- powers %>% mutate(power = {
+    p <- power;
+    p[p %in% uncommon] <- "other";
+    p
+}) %>% distinct() %>%
+    mutate(dummy=1) %>%
+    pivot_wider(id_cols="character", names_from="power", values_from="dummy", values_fill=list(dummy=0));
+
+data <- genders %>%
+    inner_join(powers_wide, by="character") %>%
+    filter(gender %in% c("male", "female")) %>%
+    mutate(is_female=1*(gender=="female"))
+
+```
+
+## QUESTION 1A
+a. Use a dimensionality reduction method of your choice to project the data down to six dimensions.
+```{r dimensionality reduction}
+
+powers_wide_1a <- data %>% select(-character, -gender, -is_female) 
+
+pca_results <- prcomp(powers_wide_1a)
+pca_results
+imagesc(pca_results$x)
+summary(pca_results)
+
+pca_results_df <- data.frame(pca_results$x) %>% select(PC1, PC2, PC3, PC4, PC5, PC6)
+
+pca_df <- cbind(pca_results_df, data %>% select(is_female))
+
+```
+
+## QUESTION 1B
+b. use LDA or Logistic Regression to produce a clustering.
+``` {r LDA}
+select <- dplyr::select;
+
+lda_results <- lda(is_female~., data=pca_df);
+
+probability <- predict(lda_results, newdata = pca_df, type="prob")$posterior
+
+probability_2 <- as_tibble(probability) %>% select(2) %>% rename(is_female_prob=1)
+
+powers_wide_1b <-cbind(pca_df, probability_2)
+
+category_test_df <-powers_wide_1b %>% 
+  mutate(is_female_pred = ifelse(is_female_prob>0.5, 1, 0))
+
+category_test_df %>% group_by(is_female, is_female_pred) %>% tally()
+
+category_test_df
+
+```
+
+## QUESTION 1C
+Calculate and plot an ROC curve. (Note that arrange I'm using to make the ROC curve look nice).
+
+```{r q1c}
+
+roc(category_test_df$is_female ~ category_test_df$is_female_prob, plot = TRUE, print.auc = TRUE, legacy.axes=TRUE)
+
+```
+
+##QUESTION 2
+Reproduce the GBM classifier from lecture. Using your test data set calculate the
+
+    i. true positive, false positive, true negative, false negative rates
+    ii. the precision, recall and f1 score.
+    iii. plot an ROC Curve.
+    
+```{r q2}
+explanatory <- data %>% select(-character, -gender, -is_female) %>% names()
+
+formula <- as.formula(sprintf("is_female ~ %s", paste(explanatory, collapse=" + ")))
+
+tts <- runif(nrow(data)) < 0.5
+
+train <- data %>% filter(tts)
+
+test <- data %>% filter(!tts)
+
+
+model <- gbm(formula, data=train)
+prob <- predict(model, newdata=test, type="response")
+test_q2 <- test %>% mutate(is_female_pred=1*(prob>0.5))
+test_q2 %>% group_by(is_female, is_female_pred) %>% tally()
+
+#i. CALCULATE RATES
+#1. true positive rate: how often are positive cases classified as positive?
+#2. true negative rate: how often are negative cases classified as negative?
+#3. false positive rate: how often are negative cases classified as positive?
+#4. false negative rate: how often are positive cases classified as negative?
+#5  accuracy: The proportion classified correctly.
+#6. recall or sensitivity: the number of true positives divided by the
+#   total number of positives. You can also calculate the true negative
+#   rate similarly.
+#7. precision: true positive count over the number of all objects classified as positive.
+
+rates <- function(actual, predicted) { 
+  positive <- which(!!actual)
+  negative <- which(!actual)
+  
+  true_positive_rate <- sum(predicted[positive])/length(positive)
+  false_positive_rate <- sum(predicted[negative])/length(negative)
+  
+   true_negative_rate <- sum(!predicted[negative])/length(negative)
+   false_negative_rate <- sum(!predicted[positive])/length(positive)
+
+accuracy <- (true_positive_rate + true_negative_rate)/(true_positive_rate + true_negative_rate + false_positive_rate + false_negative_rate)
+
+recall <- ((true_positive_rate)/ (true_postitive_rate + false_negative_rate))
+precision <- ((true_positive_rate)/(true_positive_rate + false_positive_rate))
+
+f1_score <- 2*((precision*recall)/(precision + recall))
+
+  tibble(true_positive_rate = true_positive_rate,
+         false_positive_rate = false_positive_rate,
+         true_negative_rate = true_negative_rate,
+         false_negative_rate = false_negative_rate,
+         accuracy = sum(actual==predicted)/length(actual),
+         accuracy2 = accuracy,
+         recall = recall,
+         precision = precision,
+         f1_score = f1_score)
+
+}
+rates(test_q2$is_female, test_q2$is_female_pred)
+
+
+#iii plot ROC curve
+
+roc(test_q2$is_female ~ test_q2$is_female_pred, plot = TRUE, print.auc = TRUE, legacy.axes = TRUE)
+
+
+# # ROC ANOTHER WAY
+# rate <- function(a){
+#     sum(a)/length(a);
+# }
+# maprbind <- function(f,l){
+#     do.call(rbind, Map(f, l));
+# }
+# 
+# roc <- maprbind(function(thresh){
+#     ltest <- test_ex %>% mutate(female_pred=1*(is_female_pred>=thresh)) %>%
+#         mutate(correct=female_pred == is_female);
+#     tp <- ltest %>% filter(ltest$is_female==1) %>% pull(correct) %>% rate();
+#     fp <- ltest %>% filter(ltest$is_female==0) %>% pull(correct) %>% `!`() %>% rate();
+#     tibble(threshold=thresh, true_positive=tp, false_positive=fp);
+# }, seq(from=0, to=1, length.out=10)) %>% arrange(false_positive, true_positive)
+# ggplot(roc, aes(false_positive, true_positive)) + geom_line();
+
+```
+
+##QUESTION 3
+Now consider traditional gender vs non-traditional gender. Treat "male" and "female" as "traditional" and all other genders as "non-traditional". Build a gbm to classify gender as traditional vs non-traditional using super powers.
+
+HINT: when you perform you train test split, make sure you do so in such a way that both the training and testing set contain examples of the relatively rare non-traditional genders.
+
+Calculate:
+
+true positive, false positive, true negative, false negative rates
+the precision, recall and f1 score.
+plot an ROC Curve.
+
+``` {r Q3}
+
+data2 <- genders %>%
+    inner_join(powers_wide, by="character") %>%
+    mutate(across(everything(), factor)) %>% 
+    mutate(gender_trad = if_else(gender=="male" | gender == "female", 1, 0))
+
+explanatory <- data2 %>% select(-character, -gender, -gender_trad) %>% names()
+formula3 <- as.formula(sprintf("gender_trad ~ %s", paste(explanatory, collapse=" + ")));
+
+data_trad <- data2 %>% filter(gender_trad==1)
+
+data_non_trad <- data2 %>% filter(gender_trad==0)
+
+tts_trad <- runif(nrow(data_trad)) < 0.5;
+tts_non_trad <- runif(nrow(data_non_trad )) < 0.5;
+
+train_trad <- data_trad %>% filter(tts_trad) 
+train_non_trad <- data_non_trad %>% filter(tts_non_trad) 
+test_trad <- data_trad %>% filter(!tts_trad) 
+test_non_trad <- data_non_trad %>% filter(!tts_non_trad) 
+
+train3 <- rbind(train_trad, train_non_trad)
+test3 <- rbind(test_trad, test_non_trad)
+
+model <- gbm(formula3, data=train3);
+prob <- predict(model, newdata=test3, type="response");
+test_q3 <- test3 %>% mutate(gender_trad_pred=1*(prob>0.5));
+test_q3 %>% group_by(gender_trad, gender_trad_pred) %>% tally()
+
+
+#Calculate:
+
+#true positive, false positive, true negative, false negative rates
+#the precision, recall and f1 score.
+rates(test_q3$gender_trad, test_q3$gender_trad_pred)
+
+roc(test_q3$gender_trad ~ test_q3$gender_trad_pred, plot = TRUE, print.auc = TRUE, legacy.axes = TRUE)
+
+
+```
