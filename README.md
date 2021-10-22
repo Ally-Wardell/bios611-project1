@@ -1,5 +1,5 @@
-#README
-##What does this project contain? 
+# README
+## What does this project contain? 
 This repository contains the data, code, and results of an analysis of 
 Cardiovascular disease data. Cardiovascular disease the leading cause 
 of death in the United States. Most cardiovascular diseases can be prevented by addressing 
@@ -9,6 +9,6 @@ the use of predictive modeling techniques for early detection of disease.
 
 I include an Rshiny app to do X, Y, Z. 
 
-##What is the source data? 
+## What is the source data? 
 
 This analysis is based on 
