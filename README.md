@@ -30,14 +30,19 @@ Command to build docker image:
 
 Command to run docker image (RStudio): 
 
-`docker run -v <insert path to project folder>:/home/rstudio/project -e -PASSWORD=<insert unique password> --rm -p 8787:8787 bios611_project`
+`docker run -v <insert path to project folder>:/home/rstudio/project -e -PASSWORD=<insert unique password> --rm -p 8080:8080 -p 8787:8787 bios611_project`
 
 Example: 
 
-`docker run -v <insert path to project folder>:/home/rstudio/project -e -PASSWORD=<insert unique password> --rm -p 8787:8787 bios611_project`
+`docker run -v /Users/allywardell/bios611/home/rstudio/project -e -PASSWORD=canyon --rm -p 8080:8080 -p 8787:8787 bios611_project`
 
 # How do I construct the project write-up? 
 
 # How do I construct the Rshiny app? 
 
+To construct the Rshiny app, use the `docker run ...` instructions above, then, 
+in the Rstudio terminal, run the following code: 
+`Rscript ~/project/shiny_app/app/app.R`
+
+The Rshiny app can then be viewed at localhost:8080 in your web browser. 
 
