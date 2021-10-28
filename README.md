@@ -42,7 +42,7 @@ Example:
 
 To construct the Rshiny app, use the `docker run ...` instructions above, then, 
 in the Rstudio terminal, run the following code: 
-`Rscript ~/project/shiny_app/app/app.R`
+`Rscript ~/project/shiny_app/app.R`
 
 The Rshiny app can then be viewed at localhost:8080 in your web browser. 
 
