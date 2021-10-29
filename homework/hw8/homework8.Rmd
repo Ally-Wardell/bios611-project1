@@ -1,0 +1,340 @@
+---
+title: "BIOS 611 Homework8"
+author: Ally Wardell -
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library('tidyverse')
+library('rdist')
+install.packages('ggrepel')
+library('ggrepel')
+
+```
+
+## Overwiew
+Consider the following data set:
+
+```{r cars}
+data <- rbind(tibble(x=rnorm(100, 3, 1),
+                     y=rnorm(100, 3, 1)),
+              tibble(x=rnorm(100, -3, 1),
+                     y=rnorm(100, 3, 1)),
+              tibble(x=rnorm(100, 0, 1),
+                     y=rnorm(100, -3, 1)));
+
+ggplot(data, aes(x,y)) + geom_point() + coord_equal()
+
+
+```
+
+## Question 1: k-means
+ Q1) Perform a k-means clustering with 3 clusters and plot the results with the 
+ clusters color coded.
+ 
+
+```{r pressure, echo=FALSE}
+
+k_results <- kmeans(data, centers=3);
+k_results
+
+data_2 <- data %>% mutate(cluster=k_results$cluster) 
+head(data_2)
+
+                                      
+kmeans_plot <- ggplot(data = data_2, 
+                      mapping = aes(x = x, y = y, color = cluster)) + 
+               geom_point()
+
+kmeans_plot
+```
+
+## QUESTION 2: cluster with more clusters, mutual informations
+Q2) Now consider clustering with n = 2, 3, 4, 5, 6 clusters. Repeat the clustering 5 times for each number of clusters and calculate the normalized mutual information between all the clusterings for each different number of clusters. Plot the average value of these mutual informations for n = 2, 3, 4, 5, 6.
+
+What is your interpretation of these results?
+
+A2) Here we can see that the average normalized mutual information peaks at 3 clusters. Each iteration of the K-means using 3 clusters characterized all of the points in the same clusters. As the number of clusters increases, it makes sense that the normalized mutual information decreases, as points will be assigned to more and more clusters that don't exist. 
+
+```{r Q2}
+
+k_results2_1 <- kmeans(data, centers=2);
+k_results2_2 <- kmeans(data, centers=2);
+k_results2_3 <- kmeans(data, centers=2);
+k_results2_4 <- kmeans(data, centers=2);
+k_results2_5 <- kmeans(data, centers=2);
+
+k_results3_1 <- kmeans(data, centers=3);
+k_results3_2 <- kmeans(data, centers=3);
+k_results3_3 <- kmeans(data, centers=3);
+k_results3_4 <- kmeans(data, centers=3);
+k_results3_5 <- kmeans(data, centers=3);
+
+k_results4_1 <- kmeans(data, centers=4);
+k_results4_2 <- kmeans(data, centers=4);
+k_results4_3 <- kmeans(data, centers=4);
+k_results4_4 <- kmeans(data, centers=4);
+k_results4_5 <- kmeans(data, centers=4);
+
+k_results5_1 <- kmeans(data, centers=5);
+k_results5_2 <- kmeans(data, centers=5);
+k_results5_3 <- kmeans(data, centers=5);
+k_results5_4 <- kmeans(data, centers=5);
+k_results5_5 <- kmeans(data, centers=5);
+
+k_results6_1 <- kmeans(data, centers=6);
+k_results6_2 <- kmeans(data, centers=6);
+k_results6_3 <- kmeans(data, centers=6);
+k_results6_4 <- kmeans(data, centers=6);
+k_results6_5 <- kmeans(data, centers=6);
+
+shannon <- function(tokens){
+    tbl <- table(tokens);
+    p <- (tbl %>% as.numeric())/sum(tbl %>% as.numeric());
+    sum(-p*log(p));
+}  
+
+mutinf <- function(a,b){
+    sa <- shannon(a);
+    sb <- shannon(b);
+    sab <- shannon(sprintf("%d:%d", a, b));
+    sa + sb - sab;
+}
+
+normalized_mutinf <- function(a,b){
+    2*mutinf(a,b)/(shannon(a)+shannon(b));
+}
+
+
+
+cluster2_12 <- normalized_mutinf(k_results2_1$cluster, k_results2_2$cluster)
+cluster2_13 <- normalized_mutinf(k_results2_1$cluster, k_results2_3$cluster)
+cluster2_14 <- normalized_mutinf(k_results2_1$cluster, k_results2_4$cluster)
+cluster2_15 <- normalized_mutinf(k_results2_1$cluster, k_results2_5$cluster)
+cluster2_23 <- normalized_mutinf(k_results2_2$cluster, k_results2_3$cluster)
+cluster2_24 <- normalized_mutinf(k_results2_2$cluster, k_results2_4$cluster)
+cluster2_25 <- normalized_mutinf(k_results2_2$cluster, k_results2_5$cluster)
+cluster2_34 <- normalized_mutinf(k_results2_3$cluster, k_results2_4$cluster)
+cluster2_35 <- normalized_mutinf(k_results2_3$cluster, k_results2_5$cluster)
+cluster2_45 <- normalized_mutinf(k_results2_4$cluster, k_results2_5$cluster)
+
+cluster3_12 <- normalized_mutinf(k_results3_1$cluster, k_results3_2$cluster)
+cluster3_13 <- normalized_mutinf(k_results3_1$cluster, k_results3_3$cluster)
+cluster3_14 <- normalized_mutinf(k_results3_1$cluster, k_results3_4$cluster)
+cluster3_15 <- normalized_mutinf(k_results3_1$cluster, k_results3_5$cluster)
+cluster3_23 <- normalized_mutinf(k_results3_2$cluster, k_results3_3$cluster)
+cluster3_24 <- normalized_mutinf(k_results3_2$cluster, k_results3_4$cluster)
+cluster3_25 <- normalized_mutinf(k_results3_2$cluster, k_results3_5$cluster)
+cluster3_34 <- normalized_mutinf(k_results3_3$cluster, k_results3_4$cluster)
+cluster3_35 <- normalized_mutinf(k_results3_3$cluster, k_results3_5$cluster)
+cluster3_45 <- normalized_mutinf(k_results3_4$cluster, k_results3_5$cluster)
+
+cluster4_12 <- normalized_mutinf(k_results4_1$cluster, k_results4_2$cluster)
+cluster4_13 <- normalized_mutinf(k_results4_1$cluster, k_results4_3$cluster)
+cluster4_14 <- normalized_mutinf(k_results4_1$cluster, k_results4_4$cluster)
+cluster4_15 <- normalized_mutinf(k_results4_1$cluster, k_results4_5$cluster)
+cluster4_23 <- normalized_mutinf(k_results4_2$cluster, k_results4_3$cluster)
+cluster4_24 <- normalized_mutinf(k_results4_2$cluster, k_results4_4$cluster)
+cluster4_25 <- normalized_mutinf(k_results4_2$cluster, k_results4_5$cluster)
+cluster4_34 <- normalized_mutinf(k_results4_3$cluster, k_results4_4$cluster)
+cluster4_35 <- normalized_mutinf(k_results4_3$cluster, k_results4_5$cluster)
+cluster4_45 <- normalized_mutinf(k_results4_4$cluster, k_results4_5$cluster)
+
+cluster5_12 <- normalized_mutinf(k_results5_1$cluster, k_results5_2$cluster)
+cluster5_13 <- normalized_mutinf(k_results5_1$cluster, k_results5_3$cluster)
+cluster5_14 <- normalized_mutinf(k_results5_1$cluster, k_results5_4$cluster)
+cluster5_15 <- normalized_mutinf(k_results5_1$cluster, k_results5_5$cluster)
+cluster5_23 <- normalized_mutinf(k_results5_2$cluster, k_results5_3$cluster)
+cluster5_24 <- normalized_mutinf(k_results5_2$cluster, k_results5_4$cluster)
+cluster5_25 <- normalized_mutinf(k_results5_2$cluster, k_results5_5$cluster)
+cluster5_34 <- normalized_mutinf(k_results5_3$cluster, k_results5_4$cluster)
+cluster5_35 <- normalized_mutinf(k_results5_3$cluster, k_results5_5$cluster)
+cluster5_45 <- normalized_mutinf(k_results5_4$cluster, k_results5_5$cluster)
+
+cluster6_12 <- normalized_mutinf(k_results6_1$cluster, k_results6_2$cluster)
+cluster6_13 <- normalized_mutinf(k_results6_1$cluster, k_results6_3$cluster)
+cluster6_14 <- normalized_mutinf(k_results6_1$cluster, k_results6_4$cluster)
+cluster6_15 <- normalized_mutinf(k_results6_1$cluster, k_results6_5$cluster)
+cluster6_23 <- normalized_mutinf(k_results6_2$cluster, k_results6_3$cluster)
+cluster6_24 <- normalized_mutinf(k_results6_2$cluster, k_results6_4$cluster)
+cluster6_25 <- normalized_mutinf(k_results6_2$cluster, k_results6_5$cluster)
+cluster6_34 <- normalized_mutinf(k_results6_3$cluster, k_results6_4$cluster)
+cluster6_35 <- normalized_mutinf(k_results6_3$cluster, k_results6_5$cluster)
+cluster6_45 <- normalized_mutinf(k_results6_4$cluster, k_results6_5$cluster)
+
+avg_NMI_2 <- ((cluster2_12+ cluster2_13+ cluster2_14+ cluster2_15+  cluster2_23+ cluster2_24+ cluster2_25+ cluster2_34+
+                cluster2_35+ cluster2_45)/10)
+
+avg_NMI_3 <- ((cluster3_12+ cluster3_13+ cluster3_14+ cluster3_15+
+                cluster3_23+ cluster3_24+ cluster3_25+ cluster3_34+ 
+                cluster3_35+ cluster3_45)/10)
+
+avg_NMI_4 <- ((cluster4_12+ cluster4_13+ cluster4_14+ cluster4_15+ cluster4_23+ cluster4_24+ cluster4_25+ cluster4_34+
+                cluster4_35+ cluster4_45)/10)
+
+avg_NMI_5 <- ((cluster5_12+ cluster5_13+ cluster5_14+ cluster5_15+
+            cluster5_23+ cluster5_24+ cluster5_25+ cluster5_34+ 
+            cluster5_35+ cluster5_45)/10)
+
+avg_NMI_5 <- ((cluster5_12+ cluster5_13+ cluster5_14+ cluster5_15+
+            cluster5_23+ cluster5_24+ cluster5_25+ cluster5_34+
+            cluster5_35+ cluster5_45)/10)
+
+avg_NMI_6 <- ((cluster6_12+ cluster6_13+ cluster6_14+ cluster6_15+
+                cluster6_23+ cluster6_24+ cluster6_25+ cluster6_34+
+                cluster6_35+ cluster6_45)/10)
+
+avg_nmi <- data.frame(avg_NMI_2=avg_NMI_2, 
+                     avg_NMI_3=avg_NMI_3, 
+                     avg_NMI_4=avg_NMI_4, 
+                     avg_NMI_5=avg_NMI_5, 
+                     avg_NMI_6=avg_NMI_6)
+avg_nmi <- t(avg_nmi)
+
+df_q2 <- data.frame( avg_nmi, 
+                    num_clusters = c(2, 3, 4, 5, 6)) 
+
+ggplot(df_q2, aes(x = num_clusters, y = avg_nmi)) + 
+    geom_point() + 
+    geom_line() + 
+    geom_text_repel(aes(label=avg_nmi))
+
+
+
+# point24 <- normalized_mutinf(k_results2$cluster, k_results4$cluster)
+# point24
+# point25 <- normalized_mutinf(k_results2$cluster, k_results5$cluster)
+# point25
+# point26 <- normalized_mutinf(k_results2$cluster, k_results6$cluster)
+# point26
+# point34 <- normalized_mutinf(k_results3$cluster, k_results4$cluster)
+# point34
+# point35 <- normalized_mutinf(k_results3$cluster, k_results5$cluster)
+# point35
+# point36 <- normalized_mutinf(k_results3$cluster, k_results6$cluster)
+# point36
+# point45 <- normalized_mutinf(k_results4$cluster, k_results5$cluster)
+# point45
+# point46 <- normalized_mutinf(k_results4$cluster, k_results6$cluster)
+# point46
+# point56 <- normalized_mutinf(k_results5$cluster, k_results6$cluster)
+# point56
+# 
+# 
+# point23 <- normalized_mutinf(k_results2$cluster, k_results3$cluster)
+# point23
+# point24 <- normalized_mutinf(k_results2$cluster, k_results4$cluster)
+# point24
+# point25 <- normalized_mutinf(k_results2$cluster, k_results5$cluster)
+# point25
+# point26 <- normalized_mutinf(k_results2$cluster, k_results6$cluster)
+# point26
+# point34 <- normalized_mutinf(k_results3$cluster, k_results4$cluster)
+# point34
+# point35 <- normalized_mutinf(k_results3$cluster, k_results5$cluster)
+# point35
+# point36 <- normalized_mutinf(k_results3$cluster, k_results6$cluster)
+# point36
+# point45 <- normalized_mutinf(k_results4$cluster, k_results5$cluster)
+# point45
+# point46 <- normalized_mutinf(k_results4$cluster, k_results6$cluster)
+# point46
+# point56 <- normalized_mutinf(k_results5$cluster, k_results6$cluster)
+# point56
+# 
+# df <- data.frame(point23, point24, point25, point26, point34, point35, point36,
+#                  point45, point46, point56)
+# 
+# average_nmi <- (point23 + point24 + point25 + point26 + point34 + point35 + point36 +
+#                  point45 + point46 + point56) /10
+# 
+# Avg_norm_mutual_info <- table(average_nmi)
+# Avg_norm_mutual_info 
+# 
+# 
+# plot_q2 <- data.frame(num = c(1:10), 
+#                       cluster1 = c(2, 2, 2, 2, 3, 3, 3, 4, 4, 5), 
+#                       cluster2 = c(3, 4, 5, 6, 4, 5, 6, 5, 6, 6), 
+#                       cluster_name = c('2 x 3', '2 x 4', '2 x 5', '2 x 6',
+#                                        '3 x 4', '3 x 5', '3 x 6', '4 x 5', 
+#                                        '4 x 6', '5 x 6'), 
+#                       diff_cluster_size = c(1, 2, 3, 4, 1, 2, 3, 1, 2, 1), 
+#                       norm_mi = c(point23, point24, point25, point26,
+#                                   point34, point35, point36, point45,
+#                                   point46, point56))
+# ggplot(plot_q2, aes(x = diff_cluster_size, y= norm_mi)) + 
+#     geom_point() + 
+#     geom_line() + 
+#     geom_text_repel(aes(label=cluster_name))
+#                      
+```
+
+## QUESTION 3: 
+Now consider this data set:
+data2 <- rbind(tibble(r=rnorm(100, 3, 0.8),
+                      th=rnorm(100, 3, 0.1)),
+               tibble(r=rnorm(100, 0, 1.2),
+                      th=rnorm(100, 3*pi/2, 0.1)),
+               tibble(r=rnorm(400, 6, 0.5),
+                      th=runif(400, 0, 2*pi))) %>%
+    transmute(x=r*cos(th),y=r*sin(th)); 
+ggplot(data2, aes(x,y)) + geom_point()
+
+Q3) Do you expect k-means to work on this data set? What about fuzzy-c-means? Why or why not?
+
+A3) I would not expect k-means to work on this data. There the means of the clusters will be located in the same position, thus looping through the points and assigning each point to the cluster to whose center it is closest will not work here. In fuzzy k-means each entity is only assigned a _probability_ of being in a cluster based on its distance from the center. Fuzzy-k-means works
+well when your data is distributed in concentric clusters by may have
+outliers that you want to "automatically ignore". Therefore, fuzzy k-means may work better for this data set. I would expect another clustering method would be better. 
+
+```{r Q3}
+data2 <- rbind(tibble(r=rnorm(100, 3, 0.8),
+                      th=rnorm(100, 3, 0.1)),
+               tibble(r=rnorm(100, 0, 1.2),
+                      th=rnorm(100, 3*pi/2, 0.1)),
+               tibble(r=rnorm(400, 6, 0.5),
+                      th=runif(400, 0, 2*pi))) %>%
+    transmute(x=r*cos(th),y=r*sin(th)); 
+ggplot(data2, aes(x,y)) + geom_point()
+
+data2 %>% head
+```
+
+
+## QUESTION 4
+Q4) Find all the pairwise euclidean distances between the points and construct a similarity matrix for this data set.
+
+Hint: the package "rdist" provides a function "rdist" which calculates a matrix of pairwise distances.
+
+Once you have this matrix, choose a threshold (by looking at the plot) and then invoke spectral clustering via reticulate following the example in the class with this matrix.
+
+You will need to specific the "precomputed" "affinity" option.
+
+Cluster with 3 clusters and make a color coded plot of your results.
+
+```{r Q4}
+
+library(fields)
+dist_mat<-rdist(data_2)
+
+plot(dist_mat)
+
+# use 3 as threshold 
+library(reticulate);
+use_python("/usr/bin/python3");
+cluster <- import("sklearn.cluster");
+sc <- cluster$SpectralClustering(n_clusters=as.integer(3),
+                                 affinity="precomputed")
+
+pca.r <- prcomp(dist_mat, scale=T, center=T)
+
+pca.r.x <- pca.r$x
+
+#I keep getting an error here. I think some values in my matrix are just too small. I read that standardization and normalization could fix it, but we are scaling and centering already. 
+sc$fit_predict(pca.r.x)
+
+#library('rdist')
+#pw_matrix <- rdist(data, metric = "euclidean") 
+#pw_matrix
+#plot(pw_matrix)
+```
