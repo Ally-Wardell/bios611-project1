@@ -2,12 +2,13 @@
 # Purpose:This program provides descriptive stats for each covariate 
 #         by dichotomized heart disease status
 
+
 library('tidyverse')
 library('webshot')
 library('flextable')
 library('gtsummary')
 
-derived_heart = read_csv("~/bios611/derived_data/derived_heart.csv")
+derived_heart = read_csv("derived_data/derived_heart.csv")
 
 table_descriptive1 <- tbl_summary(data= derived_heart,
                                   by=Target,
@@ -35,5 +36,5 @@ table_descriptive1 <- tbl_summary(data= derived_heart,
   add_header_lines(values="Summary Statistics for Heart Failure Covariates")
 table_descriptive1
 
-save_as_image(table_descriptive1, path = "/home/rstudio/bios611/table1_descriptive.png")
+save_as_image(table_descriptive1, path = "figures/table1_descriptive.png")
 
