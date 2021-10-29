@@ -37,9 +37,12 @@ Example:
 
 `docker run -v /Users/allywardell/bios611/home/rstudio/bios611 -e -PASSWORD=canyon --rm -p 8080:8080 -p 8787:8787 bios611_project`
 
+After that use localhost:8787 to open up rstudio in your web browser. Set bios611 as the present
+working directory. Use the gear icon. 
+
 # How do I construct the project write-up? 
 
-- This is not working for me I keep getting errors. :/ it should be `make project1_writeup.pdf`
+In the Rstudio terminal type:  `make project1_writeup.pdf`
 
 # How do I construct the Rshiny app? 
 
@@ -47,5 +50,5 @@ To construct the Rshiny app, use the `docker run ...` instructions above, then,
 in the Rstudio terminal, run the following code: 
 `Rscript ~/bios611/shiny_app/app.R`
 
-The Rshiny app can then be viewed at localhost:8080 in your web browser. 
+Alternatively, type `make shiny_app`, then navigate to localhost:8080 in your web browser. 
 
