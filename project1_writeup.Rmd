@@ -1,0 +1,46 @@
+---
+title: "Project 1 Writeup"
+author: "Ally Wardell"
+date: "10/28/2021"
+output: html_document
+---
+
+```{r include=FALSE}
+library(tidyverse)
+#library(e1071)
+#library(webshot)
+
+derived_heart = read.csv("~/bios611/derived_data/derived_heart.csv")
+shiny_heart = read.csv("~/bios611/derived_data/shiny_heart.csv")
+
+```
+
+# Introduction
+Here is my report that I have not yet written. Test 1, 2, 3. 
+
+# Dataset Description
+Useful text on describing data and its background. 
+
+![](~/bios611/table1_descriptive.png)
+```{r}
+
+shiny_order <- shiny_heart %>% mutate(target_ordered = Target_str %>% fct_infreq() %>% fct_rev())
+
+p = ggplot(shiny_order, aes(y=target_ordered))
+
+p = p + geom_bar()
+p
+```
+
+
+# Machine Learning Modeling
+Useful text on describing data and its background. 
+
+SVM with linear kernel results: 
+![](~/bios611/table2_svmlinear.png)
+SVM with polynomial kernel results: 
+![](~/bios611/table2_svmpoly.png)
+```{r echo=F, warning=F}
+
+
+```
