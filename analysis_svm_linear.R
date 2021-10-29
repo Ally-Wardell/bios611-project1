@@ -1,11 +1,14 @@
 # Program Name: analysis_svm_linear.R
 # Purpose: Machine learning SVM model with a linear kernel
 
+#webshot::install_phantomjs(force = TRUE)
 library('tidyverse')
 library('flextable')
 library('webshot')
+library('caret')
+library('e1071')
 
-derived_heart <- read_csv("~/bios611/derived_data/derived_heart.csv") %>%
+derived_heart <- read_csv("derived_data/derived_heart.csv") %>%
   mutate(Target=factor(Target))
 
 
@@ -74,4 +77,4 @@ all_results <- rbind(svm_cv_results, regress_cv_results)
 
 table2_svmlinear <- flextable(all_results)
 
-save_as_image(table2_svmlinear, path = "/home/rstudio/bios611/table2_svmlinear.png")
+save_as_image(table2_svmlinear, path = "figures/table2_svmlinear.png")
