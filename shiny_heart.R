@@ -4,7 +4,7 @@
 
 library('tidyverse')
 
-heart_data <- read_csv("~/bios611/source_data/heart_data.csv",  na=c("", "NA", "?"))
+heart_data <- read_csv("source_data/heart_data.csv",  na=c("", "NA", "?"))
 
 
 shiny_heart <- heart_data %>%
@@ -15,7 +15,7 @@ shiny_heart <- heart_data %>%
                                     "High evidence of heart disease")))))) %>%
   drop_na()
 
-write_csv(shiny_heart, "~/bios611/derived_data/shiny_heart.csv" )
+write_csv(shiny_heart, "derived_data/shiny_heart.csv" )
 
 
 
