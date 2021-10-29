@@ -5,6 +5,8 @@ library('tidyverse')
 library('randomForest')
 library('flextable')
 library('webshot')
+library('caret')
+library('e1071')
 
 derived_heart <- read_csv("~/bios611/derived_data/derived_heart.csv") %>%
   mutate(Target=factor(Target))
