@@ -18,7 +18,7 @@ library('tidyverse')
 
 # Data Preparation
 
-derived_heart = read.csv("/home/rstudio/project/derived_data/derived_heart.csv")
+shiny_heart = read.csv("derived_data/shiny_heart.csv")
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
@@ -58,13 +58,13 @@ server <- function(input, output) {
     if (input$covariate == "Resting_Blood_Pressure" | input$covariate == "Colestrol" | 
         input$covariate == "Age" | input$covariate == "MAX_Heart_Rate" | 
         input$covariate == "ST_Depression") {
-        plt <- ggplot(derived_heart, aes(y=.data[[input$covariate]])) +
+        plt <- ggplot(shiny_heart, aes(y=.data[[input$covariate]])) +
             geom_boxplot() +
-            facet_wrap(~Target)
+            facet_wrap(~Target_str)
     }
     else { 
-        derived_heart2 <- derived_heart %>% mutate(Target=factor(Target))
-        plt <- ggplot(derived_heart2, aes(y=.data[[input$covariate]], fill=Target)) +
+        shiny_heart2 <- shiny_heart %>% mutate(Target=factor(Target))
+        plt <- ggplot(shiny_heart2, aes(y=.data[[input$covariate]], fill=Target)) +
             geom_bar() 
        
         }
