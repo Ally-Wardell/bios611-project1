@@ -4,8 +4,10 @@
 library('tidyverse')
 library('flextable')
 library('webshot')
+library('caret')
+library('e1071')
 
-derived_heart <- read_csv("~/bios611/derived_data/derived_heart.csv") %>%
+derived_heart <- read_csv("derived_data/derived_heart.csv") %>%
   mutate(Target=factor(Target))
 
 
@@ -74,4 +76,4 @@ all_results <- rbind(svm_cv_results, regress_cv_results)
 
 table2_svmpoly <- flextable(all_results)
 
-save_as_image(table2_svmpoly, path = "/home/rstudio/bios611/table2_svmpoly.png")
+save_as_image(table2_svmpoly, path = "figures/table2_svmpoly.png")
