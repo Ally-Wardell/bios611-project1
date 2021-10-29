@@ -10,8 +10,8 @@ library(tidyverse)
 #library(e1071)
 #library(webshot)
 
-derived_heart = read.csv("~/bios611/derived_data/derived_heart.csv")
-shiny_heart = read.csv("~/bios611/derived_data/shiny_heart.csv")
+derived_heart = read.csv("derived_data/derived_heart.csv")
+shiny_heart = read.csv("derived_data/shiny_heart.csv")
 
 ```
 
