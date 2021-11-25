@@ -23,4 +23,4 @@ RUN R -e "install.packages(\"e1071\")"
 RUN R -e "install.packages(\"randomForest\")"
 RUN R -e "install.packages(\"shiny\")"
 RUN R -e "install.packages(\"PhantomJS\")"
-
+RUN R -e "install.packages('tinytex'); tinytex::install_tinytex(dir=\"/opt/tinytex\");"
