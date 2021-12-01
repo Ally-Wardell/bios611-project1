@@ -1,14 +1,20 @@
 ---
 title: "Project 1 Writeup"
 author: "Ally Wardell"
-date: "10/28/2021"
+date: "12/01/2021"
 output: html_document
 ---
 
-```{r include=FALSE}
+```{r setup, include=FALSE, echo=FALSE}
+knitr::opts_chunk$set(message = FALSE, warning = FALSE)
+```
+
+```{r include=FALSE, echo=FALSE}
+#options(tinytex.tlmgr.path = '/opt/tinytex/bin/x86_64-linux/tlmgr')
+#tinytex::use_tinytex("/opt/tinytex")
 library(tidyverse)
-#library(e1071)
-#library(webshot)
+library(patchwork)
+
 
 derived_heart = read.csv("derived_data/derived_heart.csv")
 shiny_heart = read.csv("derived_data/shiny_heart.csv")
@@ -16,31 +22,117 @@ shiny_heart = read.csv("derived_data/shiny_heart.csv")
 ```
 
 # Introduction
-Here is my report that I have not yet written. Test 1, 2, 3. 
+According to the CDC, the leading cause of death in the United States is heart disease, followed by cancer (2021). Due to this fact, heart disease has been prevalent in research, and should be continually examined, so researchers can gain insight into how to better diagnose and treat various heart diseases. The inter-workings of the heart are complicated, yet intriguing. As computational power has progressively developed, techniques to analyze data have progressed, as well as methodologies to use data to predict disease. Specifically, machine learning and various prediction algorithms have proven to be instrumental in cardiology advancements.  (Cuocolo et al., 2019). Random forest algorithms have shown to be useful in prediction of cardiovascular disease using variables such as age, sex, chest pain, resting blood pressure, cholesterol, fasting blood sugar, resting ECG, maximum heart rate, exercised induced angina, major vessels, and thalessemia. Additionally, support vector machines have been used to effectively classify cardiac arrhythmias using a heart rate variability signal (Asl et al., 2008). 
 
 # Dataset Description
-Useful text on describing data and its background. 
+The data utilized contains 297 observations. Each observation is an individual subject, accompanied by the measurements of the covariates in the aforementioned paragraph. Consider Table 1 below. The mean age for those who have no presence of heart disease is slightly lower than the mean age for the group with heart disease present (53 vs. 57 years). Additionally, the mean resting blood pressure (129 mmHg vs. 135 mmHg) and cholesterol (243mg vs. 252mg) lower in the group of subjects who did not have any presence of heart disease detected. Conversely, the mean maximum heart rate was higher in the group who had no evidence of heart disease (259bpm vs. 139bpm). 
 
 ![](figures/table1_descriptive.png)
-```{r}
 
+To further explore the data, Figure 2 depicts that as the severity of the categorization of heart disesase becomes more severe, the number of individuals representing these situations in the sample decrease. 
+
+```{r echo=FALSE}
 shiny_order <- shiny_heart %>% mutate(target_ordered = Target_str %>% fct_infreq() %>% fct_rev())
 
 p = ggplot(shiny_order, aes(y=target_ordered))
-
 p = p + geom_bar()
+p = p + xlab("Count") + ylab("Heart Disease Categorizations")
 p
 ```
 
+It may be of interest to consider potential relationships of continuous predictors; such as, age and resting blood pressure. 
 
-# Machine Learning Modeling
-Useful text on describing data and its background. 
 
-SVM with linear kernel results: 
-![](figures/table2_svmlinear.png)
-SVM with polynomial kernel results: 
-![](figures/table2_svmpoly.png)
-```{r echo=F, warning=F}
+```{r echo=FALSE}
+p2 = ggplot(shiny_heart, aes(x = Resting_Blood_Pressure,
+                             y = Age))
+p2 = p2 + geom_point() + geom_smooth(method='lm')
+p2 = p2 + theme(axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=1))
+p2 = p2 + xlab("Resting BP")
+#p2
 
+p3 = ggplot(shiny_heart, aes(x = MAX_Heart_Rate,
+                             y = Age))
+p3 = p3 + geom_point() + geom_smooth(method='lm')
+p3 = p3 + theme(axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=1))
+p3 = p3 + xlab("Maximum HR")
+#p3
+
+p4 = ggplot(shiny_heart, aes(x = Colestrol,
+                             y = Age))
+p4 = p4 + geom_point() + geom_smooth(method='lm')
+p4 = p4 + theme(axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=1))
+p4 = p4 + xlab("Cholesterol")
+#p4
+
+patchwork <- p2 + p3 + p4
+patchwork = patchwork + plot_annotation(
+  title = 'Age vs. Other Covariates',
+  subtitle = 'These plots will provide information for positive or negative
+              correlations between age and continuous covariates'
+)
+
+patchwork
 
 ```
+
+Finally, view the shiny app for visualizations regarding the data on the covariates, faceted by the 5 levels of heart disease presence. 
+
+# Machine Learning Modeling Methods: Initial ROC Visulaization
+A random forest model (RF) was compared with two support vector machine models (SVM) and a linear model, with the goal of selecting the model with the better performance. To select the model with the best performance, observations forming the training and testing sets were chosen randomly. The random selection of participants to form training and testing sets will assist in obtaining better error estimation for categorizing the individuals into the two categories presence of heart disease vs no presence of heart disease detected.
+
+The random forest model utilized a grid search technique to select the best parameter values. The grid search considered 50, 250, and 500 trees in combination with 4, 7, and 13 predictors at the random forest splits. The best tuning parameters for a given training set were selected using the out-of-bag mean squared error in the training set. 
+
+The ROC Curves for the various machine learning methods are below: 
+
+![](figures/roc_linear.png) 
+![](figures/roc_rf.png) 
+![](figures/roc_svm_linear.png) 
+![](figures/roc_svm_poly.png) 
+# Machine Learning Modeling Methods:Cross-Validation
+
+Additionally, the aforementioned algorithms were re-run with five-fold cross validation to train and test the RF algorithm and subsequently produced corresponding CV errors and standard errors.
+
+The support vector machine models were trained with a linear kernel and a radial basis kernel, respectively. The grid of parameters that were tested included the epsilon parameter with values 0, 0.25, 0.50, 0.75, and 1.00, coupled with the cost parameter with values of 1 to 5. Five-fold cross validation was utilized to train and test the SVM algorithm and subsequently produced corresponding CV errors and standard errors. The main goal was to obtain a predictive model with the best cross validation errors and cross validation standard errors.  All model tuning and testing was completed in R version 4.0.3 (R Core Team, 2020).
+
+
+# Results
+For analysis, I compare the random forest method, the support vector machine method with a linear and polynomial kernel (respectively), and a regression method to determine which algorithm most accurately predicts heart disease. 
+
+The support vector machine (SVM) model with the polynomial kernel performed the best with a 91.9% prediction accuracy for the no heart disease detected indication. This machine learning model was followed by the support vector machine (SVM) model with the linear kernel (accuracy = 86.2%), the linear model (accuracy = 85.6%), and lastly the random forest model (accuracy = 85.0%).
+
+When trying to accurately predict the presence of heart disease, the linear model performed the best (accuracy = 80.3%). This model was followed by the support vector machine model with the linear kernel (accuracy = 79.6%), the random forest model (accuracy = 77.4%), and the support vector machine model with the polynomial kernel (accuracy = 71.6%). 
+
+The support vector machine model with the polynomial kernel performed the best for predicting no heart disease but the worst for predicting the presence of heart disease accurately. Practically, the main goal would be to predict the presence of heart disease as closely to reality as possible, thus making the linear model or the support vector machine model with the linear kernel more practical in this situation. 
+
+Random Forest results: 
+
+![](figures/table2_randomforest.png) 
+
+
+SVM with linear kernel results: 
+
+![](figures/table2_svmlinear.png)
+
+
+SVM with polynomial kernel results: 
+
+![](figures/table2_svmpoly.png)
+
+# Concluding Remarks
+
+All of the possible variables are all easily attained through blood tests or a cardiology report. The purpose of this study would be to accurately predict mortality caused by heart failure. If an accurate prediction algorithm can be achieved by using easily attainable measures, the algorithm could be useful as an assistance mechanism for physicians to consult when considering a treatment plan. Additionally, physicians may be able to use the algorithm to take additional precautionary measures for patients who have a higher risk of death from heart disease.
+
+The next step of this project would be to make plots for the ROC curves for the cross validation steps. 
+
+# References
+Asl , B. M., Mohebbi, M., & Setarehdan, S. K. (2008, June). Support vector machine-based arrhythmia classification using reduced features of heart rate variability signal. Artificial intelligence in medicine. https://pubmed.ncbi.nlm.nih.gov/18585905/). 
+
+Centers for Disease Control and Prevention. (2021, April 9). FastStats - deaths and mortality. Centers for Disease Control and Prevention. https://www.cdc.gov/nchs/fastats/deaths.htm.
+
+Cuocolo, R., Perillo, T., De Rosa, E., Ugga, L., & Petretta, M. (2019, August). Current applications of big data and machine learning in cardiology. Journal of geriatric cardiology : JGC. https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6748901/). 
+
+R Core Team (2020). R: A language and environment for statistical computing. R Foundation for Statistical Computing, Vienna,
+
+Su, X., Xu, Y., Tan, Z., Wang, X., Yang, P., Su, Y., Jiang, Y., Qin, S., & Shang, L. (2020, September). Prediction for cardiovascular diseases based on laboratory data: An analysis of random forest model. Journal of clinical laboratory analysis. https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7521325/. 
+
