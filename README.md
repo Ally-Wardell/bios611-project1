@@ -44,6 +44,10 @@ working directory. Use the gear icon.
 
 In the Rstudio terminal type:  `make project1_writeup.pdf`
 
+Note: I was having issues with TinyTex. Sometimes I can get the report to render, 
+other times I can not. It seems that when I individually make all of the components
+of my report, and then make my report. It works. 
+
 # How do I construct the Rshiny app? 
 
 To construct the Rshiny app, use the `docker run ...` instructions above, then, 
