@@ -2,7 +2,7 @@
 # Purpose:This program provides descriptive stats for each covariate 
 #         by dichotomized heart disease status
 
-
+install.packages(webshot::install_phantomjs())
 library('tidyverse')
 library('webshot')
 library('flextable')
