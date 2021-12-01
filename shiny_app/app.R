@@ -65,7 +65,7 @@ server <- function(input, output) {
     else { 
         shiny_heart2 <- shiny_heart %>% mutate(Target=factor(Target))
         plt <- ggplot(shiny_heart2, aes(y=.data[[input$covariate]], fill=Target)) +
-            geom_bar() 
+            geom_bar(position="dodge") 
        
         }
         plt
