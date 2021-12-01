@@ -1,5 +1,6 @@
 FROM rocker/verse
 RUN R -e "install.packages(\"tidyverse\")"
+RUN R -e "install.packages(\"patchwork\")"
 RUN R -e "install.packages(\"matlab\")"
 RUN R -e "install.packages(\"deSolve\")"
 RUN R -e "install.packages(\"reticulate\")"
