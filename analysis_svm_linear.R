@@ -43,6 +43,8 @@ for(i in 1:5){
   error_per_fold_regress[[i]] <- confusionMatrix(data = test_data$predict_lm,
                                                  reference = test_data$Target)$byClass
 }
+
+
 # Bind together, add MSE
 error_all_folds <- do.call("rbind", error_per_fold)
 error_all_folds_regress <- do.call("rbind", error_per_fold_regress)
@@ -53,9 +55,9 @@ error_all_folds_regress <- do.call("rbind", error_per_fold_regress)
 # Get mean and SE MSE
 svm_cv_results <- 
   data.frame("Method"="svm",
-             "CV_Accuracy"=apply(error_all_folds[,c("Sensitivity", "Specificity")], 
+             "CV sensitivity/specificity"=apply(error_all_folds[,c("Sensitivity", "Specificity")], 
                             MARGIN = 2, FUN = mean),
-             "CV_Accuracy_SE"=apply(error_all_folds[,c("Sensitivity", 
+             "CV sensitivity/specificity SE"=apply(error_all_folds[,c("Sensitivity", 
                                                   "Specificity")], 
                                MARGIN = 2, FUN = sd))
 #%>%
@@ -64,10 +66,10 @@ svm_cv_results <-
 # Do same for regression
 regress_cv_results <- 
   data.frame("Method"="lm",
-             "CV_Accuracy"=
+             "CV sensitivity/specificity"=
                apply(error_all_folds_regress[,c("Sensitivity", "Specificity")], 
                      MARGIN = 2, FUN = mean),
-             "CV_Accuracy_SE"=apply(error_all_folds_regress[,c("Sensitivity", 
+             "CV sensitivity/specificity SE"=apply(error_all_folds_regress[,c("Sensitivity", 
                                                           "Specificity")], 
                                MARGIN = 2, FUN = sd))
 #%>% rownames_to_column(var="Measure")
@@ -75,6 +77,7 @@ regress_cv_results <-
 # Print results in flextable (not needed, but useful)
 all_results <- rbind(svm_cv_results, regress_cv_results)
 
-table2_svmlinear <- flextable(all_results)
+table2_svmlinear <- flextable(all_results) %>% 
+                    add_header_lines(values = "Support Vector Machine with a Linear Kernel and Linear Model /nSensitivity/Specificity")
 
 save_as_image(table2_svmlinear, path = "figures/table2_svmlinear.png")
